@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Entre Redes - Portal Oficial</title>
   
+  <!-- Vinculación del Manifiesto y Logo Oficial -->
   <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/svg+xml" href="https://api.iconify.design/fluent-emoji-flat:volleyball.svg">
-  <link rel="apple-touch-icon" href="https://api.iconify.design/fluent-emoji-flat:volleyball.svg">
+  <link rel="icon" type="image/png" href="./logo.png">
+  <link rel="apple-touch-icon" href="./logo.png">
   
   <meta name="theme-color" content="#0d1117">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -42,7 +43,7 @@
       display: block;
     }
 
-    /* Mensaje de desbloqueo en caso de restricción de perfil */
+    /* CARTEL DE DESBLOQUEO EN CASO DE RESTRICCIÓN DE PERFIL/NATIVE */
     #fallbackNotice {
       display: none;
       position: absolute;
@@ -107,6 +108,13 @@
       font-weight: 600;
     }
 
+    .pwa-bar-info img {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      object-fit: cover;
+    }
+
     #btnBarInstall {
       background: #00bf63;
       color: #000000;
@@ -120,9 +128,14 @@
       align-items: center;
       gap: 5px;
       white-space: nowrap;
+      transition: transform 0.15s ease;
     }
 
-    /* VENTANA MODAL DE INSTRUCCIONES */
+    #btnBarInstall:active {
+      transform: scale(0.95);
+    }
+
+    /* VENTANA MODAL DE INSTRUCCIONES GUÍA */
     #pwaInstructionsModal {
       display: none;
       position: fixed;
@@ -196,7 +209,7 @@
   <!-- BARRA FIJA DE INSTALACIÓN -->
   <div id="pwaBottomBar">
     <div class="pwa-bar-info">
-      <span>🏐</span>
+      <img src="./logo.png" alt="Logo" onerror="this.style.display='none'">
       <span>Instalá la App para acceso rápido</span>
     </div>
     <button id="btnBarInstall">
@@ -224,7 +237,22 @@
     const fallbackNotice = document.getElementById('fallbackNotice');
     const iframe = document.getElementById('appFrame');
 
-    // Detección de bloqueo de iframe por política de Google/Chrome
+    // 1. DETECCIÓN DE MODO INSTALADO / STANDALONE (Oculta botones si entra como App)
+    function verificarModoInstalado() {
+      const isStandalone = window.navigator.standalone || 
+                           window.matchMedia('(display-mode: standalone)').matches || 
+                           window.matchMedia('(display-mode: fullscreen)').matches ||
+                           window.matchMedia('(display-mode: minimal-ui)').matches;
+      
+      if (isStandalone) {
+        bottomBar.style.display = 'none';
+      }
+    }
+
+    // Ejecutar verificación de inmediato
+    verificarModoInstalado();
+
+    // Detección de respuesta iframe
     let iframeLoaded = false;
     iframe.onload = () => { iframeLoaded = true; };
     setTimeout(() => {
@@ -232,12 +260,6 @@
         fallbackNotice.style.display = 'block';
       }
     }, 3500);
-
-    // Ocultar la barra si la app ya está instalada y abierta como App independiente
-    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-    if (isStandalone) {
-      bottomBar.style.display = 'none';
-    }
 
     // Registrar Service Worker
     if ('serviceWorker' in navigator) {
@@ -250,6 +272,12 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
+    });
+
+    // 2. DETECTAR CUANDO LA APP FUE INSTALADA Y OCULTAR LA BARRA DE INMEDIATO
+    window.addEventListener('appinstalled', () => {
+      bottomBar.style.display = 'none';
+      deferredPrompt = null;
     });
 
     // Acción del botón Instalar
@@ -265,9 +293,9 @@
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         
         if (isIOS) {
-          modalText.innerHTML = "<b>Para instalar en iPhone:</b><br><br>1. Tocá el botón <b>'Compartir'</b> ⎘ abajo en Safari.<br>2. Elegí <b>'Agregar a inicio'</b> ➕.";
+          modalText.innerHTML = "<b>Para instalar en iPhone:</b><br><br>1. Tocá el botón <b>'Compartir'</b> ⎘ abajo en Safari.<br>2. Buscá y elegí <b>'Agregar a inicio'</b> ➕.";
         } else {
-          modalText.innerHTML = "<b>¿No salta el instalador automático? Probá esto:</b><br><br>• Comprobá si ya la tenés agregada en el teléfono.<br>• Tocá los <b>3 puntos (⋮)</b> arriba en Chrome.<br>• Seleccioná <b>'Agregar a la pantalla principal'</b> o <b>'Instalar aplicación'</b>.";
+          modalText.innerHTML = "<b>¿No salta el instalador automático? Probá esto:</b><br><br>• Comprobá si ya la tenés instalada en tu pantalla principal.<br>• Tocá los <b>3 puntos (⋮)</b> arriba en Chrome.<br>• Seleccioná <b>'Agregar a la pantalla principal'</b> o <b>'Instalar aplicación'</b>.";
         }
         modal.style.display = 'flex';
       }
