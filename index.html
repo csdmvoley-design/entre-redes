@@ -32,29 +32,30 @@
       display: block;
     }
 
-    /* BOTÓN FLOTANTE ARRIBA A LA IZQUIERDA */
+    /* BOTÓN FLOTANTE CENTRADO ARRIBA */
     #btnFloatingInstall {
       position: fixed;
-      top: 12px;
-      left: 12px;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
       background: #161b22;
       color: #00bf63;
-      border: 2px solid #00bf63;
-      border-radius: 30px;
-      padding: 6px 14px;
-      font-weight: 800;
-      font-size: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+      border: 1.5px solid #00bf63;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-weight: 700;
+      font-size: 11px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.8);
       z-index: 999999;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       transition: transform 0.2s ease;
     }
 
     #btnFloatingInstall:active {
-      transform: scale(0.95);
+      transform: translateX(-50%) scale(0.95);
     }
 
     /* VENTANA MODAL DE INSTRUCCIONES */
@@ -112,7 +113,7 @@
 </head>
 <body>
 
-  <!-- BOTÓN FLOTANTE ARRIBA A LA IZQUIERDA -->
+  <!-- BOTÓN FLOTANTE CENTRADO ARRIBA -->
   <button id="btnFloatingInstall">
     <span>🏐</span>
     <span>Instalar App</span>
@@ -162,10 +163,9 @@
       deferredPrompt = e;
     });
 
-    // Acción al tocar el botón arriba a la izquierda
+    // Acción al tocar el botón superior central
     btnInstall.addEventListener('click', async () => {
       if (deferredPrompt) {
-        // Si el navegador tiene el evento listo, lanza la instalación directa
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
@@ -173,13 +173,12 @@
         }
         deferredPrompt = null;
       } else {
-        // Si el navegador no lo lanzó automático (como pasa en tu celu), muestra la guía paso a paso clara
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         
         if (isIOS) {
           modalText.innerHTML = "<b>Para instalar en iPhone:</b><br><br>1. Tocá el botón <b>'Compartir'</b> ⎘ abajo en Safari.<br>2. Buscá y elegí <b>'Agregar a inicio'</b> ➕.";
         } else {
-          modalText.innerHTML = "<b>¿No aparece 'Instalar' en los 3 puntos? Probá esto:</b><br><br>• Asegurate de no tener la app ya instalada en tu celu.<br>• Tocá los <b>3 puntos (⋮)</b> de Chrome.<br>• Buscá <b>'Agregar a la pantalla principal'</b> o <b>'Instalar aplicación'</b>.<br>• Si usas otro navegador (como Brave o Samsung Internet), busca la opción de descarga en su menú.";
+          modalText.innerHTML = "<b>¿No aparece la opción de instalar? Probá esto:</b><br><br>• Asegurate de no tener la app ya instalada.<br>• Tocá los <b>3 puntos (⋮)</b> de Chrome.<br>• Buscá <b>'Agregar a la pantalla principal'</b> o <b>'Instalar aplicación'</b>.";
         }
         modal.style.display = 'flex';
       }
