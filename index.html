@@ -42,7 +42,50 @@
       display: block;
     }
 
-    /* BARRA INFERIOR DE INSTALACIÓN (Sin TAPAR LOGOS) */
+    /* Mensaje de desbloqueo en caso de restricción de perfil */
+    #fallbackNotice {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #ffffff;
+      padding: 20px;
+      background: #161b22;
+      border: 1px solid #00bf63;
+      border-radius: 16px;
+      width: 85%;
+      max-width: 320px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+      z-index: 10;
+    }
+
+    #fallbackNotice h4 {
+      margin: 0 0 10px 0;
+      color: #00bf63;
+    }
+
+    #fallbackNotice p {
+      font-size: 12px;
+      color: #8b949e;
+      margin-bottom: 15px;
+    }
+
+    .btn-fallback {
+      background: #00bf63;
+      color: #000;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    /* BARRA INFERIOR DE INSTALACIÓN */
     #pwaBottomBar {
       background: #161b22;
       border-top: 1px solid #00bf63;
@@ -77,11 +120,6 @@
       align-items: center;
       gap: 5px;
       white-space: nowrap;
-      transition: transform 0.15s ease;
-    }
-
-    #btnBarInstall:active {
-      transform: scale(0.95);
     }
 
     /* VENTANA MODAL DE INSTRUCCIONES */
@@ -140,6 +178,13 @@
 
   <!-- CONTENEDOR DEL IFRAME -->
   <div class="iframe-container">
+    <div id="fallbackNotice">
+      <span>🏐</span>
+      <h4>Cargar Portal</h4>
+      <p>Tu navegador requiere una confirmación directa para visualizar la app de Google.</p>
+      <a class="btn-fallback" href="https://script.google.com/macros/s/AKfycbzVFhDthR8fFK7sakUg2SYGmtkeQkN-eloAlapDD2Pnh_PjH2lapPFXSAtSyiDlSJxuAg/exec" target="_self">Ingresar al Portal</a>
+    </div>
+
     <iframe 
       id="appFrame"
       src="https://script.google.com/macros/s/AKfycbzVFhDthR8fFK7sakUg2SYGmtkeQkN-eloAlapDD2Pnh_PjH2lapPFXSAtSyiDlSJxuAg/exec" 
@@ -176,6 +221,17 @@
     const btnInstall = document.getElementById('btnBarInstall');
     const modal = document.getElementById('pwaInstructionsModal');
     const modalText = document.getElementById('modalInstructionsText');
+    const fallbackNotice = document.getElementById('fallbackNotice');
+    const iframe = document.getElementById('appFrame');
+
+    // Detección de bloqueo de iframe por política de Google/Chrome
+    let iframeLoaded = false;
+    iframe.onload = () => { iframeLoaded = true; };
+    setTimeout(() => {
+      if (!iframeLoaded) {
+        fallbackNotice.style.display = 'block';
+      }
+    }, 3500);
 
     // Ocultar la barra si la app ya está instalada y abierta como App independiente
     const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
