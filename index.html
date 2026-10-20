@@ -32,30 +32,30 @@
       display: block;
     }
 
-    /* BOTÓN FLOTANTE CENTRADO ARRIBA */
+    /* BOTÓN FLOTANTE ABAJO A LA IZQUIERDA */
     #btnFloatingInstall {
       position: fixed;
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #161b22;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(22, 27, 34, 0.9);
       color: #00bf63;
       border: 1.5px solid #00bf63;
-      border-radius: 20px;
-      padding: 5px 12px;
+      border-radius: 25px;
+      padding: 8px 14px;
       font-weight: 700;
-      font-size: 11px;
+      font-size: 12px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.8);
       z-index: 999999;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 5px;
-      transition: transform 0.2s ease;
+      gap: 6px;
+      backdrop-filter: blur(4px);
+      transition: transform 0.2s ease, background 0.2s ease;
     }
 
     #btnFloatingInstall:active {
-      transform: translateX(-50%) scale(0.95);
+      transform: scale(0.95);
     }
 
     /* VENTANA MODAL DE INSTRUCCIONES */
@@ -113,7 +113,7 @@
 </head>
 <body>
 
-  <!-- BOTÓN FLOTANTE CENTRADO ARRIBA -->
+  <!-- BOTÓN FLOTANTE ABAJO A LA IZQUIERDA -->
   <button id="btnFloatingInstall">
     <span>🏐</span>
     <span>Instalar App</span>
@@ -163,7 +163,7 @@
       deferredPrompt = e;
     });
 
-    // Acción al tocar el botón superior central
+    // Acción al tocar el botón inferior izquierdo
     btnInstall.addEventListener('click', async () => {
       if (deferredPrompt) {
         deferredPrompt.prompt();
