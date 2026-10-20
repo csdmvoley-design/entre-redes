@@ -15,50 +15,62 @@
   <meta name="apple-mobile-web-app-title" content="Entre Redes">
 
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #0d1117; font-family: sans-serif; }
-    iframe { width: 100%; height: 100%; border: none; }
+    body, html { 
+      margin: 0; 
+      padding: 0; 
+      height: 100%; 
+      width: 100%; 
+      overflow: hidden; 
+      background-color: #0d1117; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    }
+    
+    iframe { 
+      width: 100%; 
+      height: 100%; 
+      border: none; 
+      display: block;
+    }
 
-    /* Cartel de Instalación Flotante */
+    /* Banner Flotante Superior */
     #pwaInstallBanner {
       display: none;
       position: fixed;
       top: 12px;
       left: 50%;
       transform: translateX(-50%);
-      width: 90%;
-      max-width: 400px;
+      width: 88%;
+      max-width: 380px;
       background: #161b22;
-      border: 2px solid #00bf63;
+      border: 1.5px solid #00bf63;
       border-radius: 14px;
-      padding: 12px 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+      padding: 10px 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.8);
       z-index: 999999;
       color: #ffffff;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
     }
 
-    #pwaInstallBanner .pwa-info {
+    .pwa-info {
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 13px;
-      font-weight: 600;
     }
 
-    #pwaInstallBanner .pwa-btn {
+    .pwa-btn {
       background: #00bf63;
       color: #000000;
       border: none;
-      padding: 8px 14px;
+      padding: 7px 14px;
       border-radius: 20px;
-      font-weight: 800;
+      font-weight: 700;
       font-size: 12px;
       cursor: pointer;
     }
 
-    #pwaInstallBanner .pwa-close {
+    .pwa-close {
       background: transparent;
       border: none;
       color: #8b949e;
@@ -69,13 +81,13 @@
 </head>
 <body>
 
-  <!-- BANNER FLOTANTE DE INSTALACIÓN -->
+  <!-- BANNER DE INSTALACIÓN -->
   <div id="pwaInstallBanner">
     <div class="pwa-info">
       <span style="font-size: 22px;">🏐</span>
       <div>
-        <div style="color:#00bf63; font-weight:800;">Entre Redes</div>
-        <div style="font-size:11px; color:#8b949e;" id="pwaText">Instalá la app en tu celular</div>
+        <div style="color:#00bf63; font-weight:800; font-size:13px;">Entre Redes</div>
+        <div style="font-size:11px; color:#8b949e;" id="pwaText">Instalar App en la pantalla de inicio</div>
       </div>
     </div>
     <div style="display:flex; align-items:center; gap:6px;">
@@ -84,7 +96,13 @@
     </div>
   </div>
 
-  <iframe src="https://script.google.com/macros/s/AKfycbzVFhDthR8fFK7sakUg2SYGmtkeQkN-eloAlapDD2Pnh_PjH2lapPFXSAtSyiDlSJxuAg/exec"></iframe>
+  <!-- IFRAME CON ATRIBUTOS DE PERMISO Y SEGURIDAD -->
+  <iframe 
+    id="appFrame"
+    src="TU_LINK_DE_APPS_SCRIPT_AQUI" 
+    allow="geolocation; microphone; camera; clipboard-write; encrypted-media; autoplay"
+    sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation">
+  </iframe>
 
   <script>
     let deferredPrompt;
@@ -94,10 +112,12 @@
 
     // Registrar Service Worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
     }
 
-    // Detectar si el celular permite la instalación automática (Android / Chrome)
+    // Capturar evento de instalación en Android / Chrome
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
@@ -115,12 +135,12 @@
       }
     });
 
-    // Detectar si es iPhone (iOS Safari)
+    // Detectar si es iOS (iPhone / iPad)
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
 
     if (isIOS && !isStandalone) {
-      pwaText.innerText = "Tocá 'Compartir' ⎘ y luego 'Agregar a inicio'";
+      pwaText.innerText = "Tocá 'Compartir' ⎘ y 'Agregar a inicio'";
       btnInstall.style.display = 'none';
       banner.style.display = 'flex';
     }
