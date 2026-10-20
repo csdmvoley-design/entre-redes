@@ -9,12 +9,13 @@
   <link rel="icon" type="image/svg+xml" href="https://api.iconify.design/fluent-emoji-flat:volleyball.svg">
   <link rel="apple-touch-icon" href="https://api.iconify.design/fluent-emoji-flat:volleyball.svg">
   
-  <meta name="theme-color" content="#00bf63">
+  <meta name="theme-color" content="#0d1117">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Entre Redes">
 
   <style>
+    * { box-sizing: border-box; }
     body, html { 
       margin: 0; 
       padding: 0; 
@@ -23,8 +24,17 @@
       overflow: hidden; 
       background-color: #0d1117; 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      display: flex;
+      flex-direction: column;
     }
     
+    .iframe-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
     iframe { 
       width: 100%; 
       height: 100%; 
@@ -32,29 +42,45 @@
       display: block;
     }
 
-    /* BOTÓN FLOTANTE ABAJO A LA IZQUIERDA */
-    #btnFloatingInstall {
-      position: fixed;
-      bottom: 16px;
-      left: 16px;
-      background: rgba(22, 27, 34, 0.9);
-      color: #00bf63;
-      border: 1.5px solid #00bf63;
-      border-radius: 25px;
-      padding: 8px 14px;
-      font-weight: 700;
-      font-size: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+    /* BARRA INFERIOR DE INSTALACIÓN (Sin TAPAR LOGOS) */
+    #pwaBottomBar {
+      background: #161b22;
+      border-top: 1px solid #00bf63;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
       z-index: 999999;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.5);
+    }
+
+    .pwa-bar-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    #btnBarInstall {
+      background: #00bf63;
+      color: #000000;
+      border: none;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-weight: 800;
+      font-size: 11px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
-      backdrop-filter: blur(4px);
-      transition: transform 0.2s ease, background 0.2s ease;
+      gap: 5px;
+      white-space: nowrap;
+      transition: transform 0.15s ease;
     }
 
-    #btnFloatingInstall:active {
+    #btnBarInstall:active {
       transform: scale(0.95);
     }
 
@@ -71,7 +97,6 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
-      box-sizing: border-box;
     }
 
     .modal-card {
@@ -113,11 +138,26 @@
 </head>
 <body>
 
-  <!-- BOTÓN FLOTANTE ABAJO A LA IZQUIERDA -->
-  <button id="btnFloatingInstall">
-    <span>🏐</span>
-    <span>Instalar App</span>
-  </button>
+  <!-- CONTENEDOR DEL IFRAME -->
+  <div class="iframe-container">
+    <iframe 
+      id="appFrame"
+      src="https://script.google.com/macros/s/AKfycbzVFhDthR8fFK7sakUg2SYGmtkeQkN-eloAlapDD2Pnh_PjH2lapPFXSAtSyiDlSJxuAg/exec" 
+      allow="geolocation; microphone; camera; clipboard-write; encrypted-media; autoplay"
+      sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation">
+    </iframe>
+  </div>
+
+  <!-- BARRA FIJA DE INSTALACIÓN -->
+  <div id="pwaBottomBar">
+    <div class="pwa-bar-info">
+      <span>🏐</span>
+      <span>Instalá la App para acceso rápido</span>
+    </div>
+    <button id="btnBarInstall">
+      <span>Instalar</span>
+    </button>
+  </div>
 
   <!-- VENTANA MODAL DE INSTRUCCIONES -->
   <div id="pwaInstructionsModal">
@@ -130,24 +170,17 @@
     </div>
   </div>
 
-  <!-- IFRAME CON LA APP DE GOOGLE -->
-  <iframe 
-    id="appFrame"
-    src="https://script.google.com/macros/s/AKfycbzVFhDthR8fFK7sakUg2SYGmtkeQkN-eloAlapDD2Pnh_PjH2lapPFXSAtSyiDlSJxuAg/exec" 
-    allow="geolocation; microphone; camera; clipboard-write; encrypted-media; autoplay"
-    sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation">
-  </iframe>
-
   <script>
     let deferredPrompt;
-    const btnInstall = document.getElementById('btnFloatingInstall');
+    const bottomBar = document.getElementById('pwaBottomBar');
+    const btnInstall = document.getElementById('btnBarInstall');
     const modal = document.getElementById('pwaInstructionsModal');
     const modalText = document.getElementById('modalInstructionsText');
 
-    // Ocultar botón si ya está abierta como App nativa
+    // Ocultar la barra si la app ya está instalada y abierta como App independiente
     const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
     if (isStandalone) {
-      btnInstall.style.display = 'none';
+      bottomBar.style.display = 'none';
     }
 
     // Registrar Service Worker
@@ -157,28 +190,28 @@
       });
     }
 
-    // Capturar el evento automático de Android/Chrome
+    // Capturar evento de instalación automática en Android / Chrome
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
     });
 
-    // Acción al tocar el botón inferior izquierdo
+    // Acción del botón Instalar
     btnInstall.addEventListener('click', async () => {
       if (deferredPrompt) {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
-          btnInstall.style.display = 'none';
+          bottomBar.style.display = 'none';
         }
         deferredPrompt = null;
       } else {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         
         if (isIOS) {
-          modalText.innerHTML = "<b>Para instalar en iPhone:</b><br><br>1. Tocá el botón <b>'Compartir'</b> ⎘ abajo en Safari.<br>2. Buscá y elegí <b>'Agregar a inicio'</b> ➕.";
+          modalText.innerHTML = "<b>Para instalar en iPhone:</b><br><br>1. Tocá el botón <b>'Compartir'</b> ⎘ abajo en Safari.<br>2. Elegí <b>'Agregar a inicio'</b> ➕.";
         } else {
-          modalText.innerHTML = "<b>¿No aparece la opción de instalar? Probá esto:</b><br><br>• Asegurate de no tener la app ya instalada.<br>• Tocá los <b>3 puntos (⋮)</b> de Chrome.<br>• Buscá <b>'Agregar a la pantalla principal'</b> o <b>'Instalar aplicación'</b>.";
+          modalText.innerHTML = "<b>¿No salta el instalador automático? Probá esto:</b><br><br>• Comprobá si ya la tenés agregada en el teléfono.<br>• Tocá los <b>3 puntos (⋮)</b> arriba en Chrome.<br>• Seleccioná <b>'Agregar a la pantalla principal'</b> o <b>'Instalar aplicación'</b>.";
         }
         modal.style.display = 'flex';
       }
