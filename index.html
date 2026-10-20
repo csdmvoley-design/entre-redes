@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Entre Redes - Portal Oficial</title>
   
-  <!-- Vinculación del Manifiesto y tu Logo Oficial -->
+  <!-- Vinculación del Manifiesto y Logo Oficial -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="./Entre%20Redes%202026%20Isotipo.png">
   <link rel="apple-touch-icon" href="./Entre%20Redes%202026%20Isotipo.png">
@@ -86,7 +86,7 @@
       display: inline-block;
     }
 
-    /* BARRA INFERIOR DE INSTALACIÓN */
+    /* BARRA INFERIOR DE INSTALACIÓN (ZÓCALO) */
     #pwaBottomBar {
       background: #161b22;
       border-top: 1px solid #00bf63;
@@ -115,6 +115,12 @@
       object-fit: cover;
     }
 
+    .bar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
     #btnBarInstall {
       background: #00bf63;
       color: #000000;
@@ -133,6 +139,33 @@
 
     #btnBarInstall:active {
       transform: scale(0.95);
+    }
+
+    /* MARCA DE AGUA EN EL MARGEN DERECHO */
+    .fgs-watermark {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      line-height: 1;
+      user-select: none;
+    }
+
+    .fgs-watermark .brand-main {
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 1px;
+      color: #ffffff;
+    }
+
+    .fgs-watermark .brand-sub {
+      font-weight: 600;
+      font-size: 6.5px;
+      letter-spacing: 1.5px;
+      color: #00bf63;
+      text-transform: uppercase;
+      margin-top: 2px;
     }
 
     /* VENTANA MODAL DE INSTRUCCIONES GUÍA */
@@ -212,9 +245,18 @@
       <img src="./Entre%20Redes%202026%20Isotipo.png" alt="Logo" onerror="this.style.display='none'">
       <span>Instalá la App para acceso rápido</span>
     </div>
-    <button id="btnBarInstall">
-      <span>Instalar</span>
-    </button>
+    
+    <div class="bar-actions">
+      <button id="btnBarInstall">
+        <span>Instalar</span>
+      </button>
+
+      <!-- MARCA DE AGUA EN EL MARGEN DERECHO -->
+      <div class="fgs-watermark">
+        <span class="brand-main">FGS</span>
+        <span class="brand-sub">DEVELOPMENT</span>
+      </div>
+    </div>
   </div>
 
   <!-- VENTANA MODAL DE INSTRUCCIONES -->
@@ -237,7 +279,6 @@
     const fallbackNotice = document.getElementById('fallbackNotice');
     const iframe = document.getElementById('appFrame');
 
-    // 1. DETECCIÓN DE MODO INSTALADO / STANDALONE (Oculta botones si entra como App)
     function verificarModoInstalado() {
       const isStandalone = window.navigator.standalone || 
                            window.matchMedia('(display-mode: standalone)').matches || 
@@ -251,7 +292,6 @@
 
     verificarModoInstalado();
 
-    // Detección de respuesta iframe
     let iframeLoaded = false;
     iframe.onload = () => { iframeLoaded = true; };
     setTimeout(() => {
@@ -260,26 +300,22 @@
       }
     }, 3500);
 
-    // Registrar Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(() => {});
       });
     }
 
-    // Capturar evento de instalación automática en Android / Chrome
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
     });
 
-    // 2. DETECTAR CUANDO LA APP FUE INSTALADA Y OCULTAR LA BARRA
     window.addEventListener('appinstalled', () => {
       bottomBar.style.display = 'none';
       deferredPrompt = null;
     });
 
-    // Acción del botón Instalar
     btnInstall.addEventListener('click', async () => {
       if (deferredPrompt) {
         deferredPrompt.prompt();
