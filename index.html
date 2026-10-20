@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Entre Redes - Portal Oficial</title>
   
-  <!-- Manifest & Favicon PWA -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/svg+xml" href="https://api.iconify.design/fluent-emoji-flat:volleyball.svg">
   <link rel="apple-touch-icon" href="https://api.iconify.design/fluent-emoji-flat:volleyball.svg">
@@ -16,16 +15,118 @@
   <meta name="apple-mobile-web-app-title" content="Entre Redes">
 
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #0d1117; }
+    body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #0d1117; font-family: sans-serif; }
     iframe { width: 100%; height: 100%; border: none; }
+
+    /* Cartel de Instalación Flotante */
+    #pwaInstallBanner {
+      display: none;
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 400px;
+      background: #161b22;
+      border: 2px solid #00bf63;
+      border-radius: 14px;
+      padding: 12px 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+      z-index: 999999;
+      color: #ffffff;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    #pwaInstallBanner .pwa-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #pwaInstallBanner .pwa-btn {
+      background: #00bf63;
+      color: #000000;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    #pwaInstallBanner .pwa-close {
+      background: transparent;
+      border: none;
+      color: #8b949e;
+      font-size: 16px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
+
+  <!-- BANNER FLOTANTE DE INSTALACIÓN -->
+  <div id="pwaInstallBanner">
+    <div class="pwa-info">
+      <span style="font-size: 22px;">🏐</span>
+      <div>
+        <div style="color:#00bf63; font-weight:800;">Entre Redes</div>
+        <div style="font-size:11px; color:#8b949e;" id="pwaText">Instalá la app en tu celular</div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:6px;">
+      <button class="pwa-btn" id="btnInstallPwa">Instalar</button>
+      <button class="pwa-close" onclick="cerrarBanner()">✕</button>
+    </div>
+  </div>
+
   <iframe src="https://script.google.com/macros/s/AKfycbzVFhDthR8fFK7sakUg2SYGmtkeQkN-eloAlapDD2Pnh_PjH2lapPFXSAtSyiDlSJxuAg/exec"></iframe>
 
   <script>
+    let deferredPrompt;
+    const banner = document.getElementById('pwaInstallBanner');
+    const btnInstall = document.getElementById('btnInstallPwa');
+    const pwaText = document.getElementById('pwaText');
+
+    // Registrar Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    // Detectar si el celular permite la instalación automática (Android / Chrome)
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      banner.style.display = 'flex';
+    });
+
+    btnInstall.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          banner.style.display = 'none';
+        }
+        deferredPrompt = null;
+      }
+    });
+
+    // Detectar si es iPhone (iOS Safari)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+
+    if (isIOS && !isStandalone) {
+      pwaText.innerText = "Tocá 'Compartir' ⎘ y luego 'Agregar a inicio'";
+      btnInstall.style.display = 'none';
+      banner.style.display = 'flex';
+    }
+
+    function cerrarBanner() {
+      banner.style.display = 'none';
     }
   </script>
 </body>
