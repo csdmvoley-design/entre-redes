@@ -32,71 +32,105 @@
       display: block;
     }
 
-    /* Banner Flotante Superior */
-    #pwaInstallBanner {
-      display: none;
+    /* Botón Flotante Permanente de Instalación */
+    #btnFloatingInstall {
       position: fixed;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 88%;
-      max-width: 380px;
-      background: #161b22;
-      border: 1.5px solid #00bf63;
-      border-radius: 14px;
-      padding: 10px 14px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-      z-index: 999999;
-      color: #ffffff;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .pwa-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .pwa-btn {
+      bottom: 20px;
+      right: 20px;
       background: #00bf63;
       color: #000000;
-      border: none;
-      padding: 7px 14px;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 12px;
+      border: 2px solid #ffffff;
+      border-radius: 50px;
+      padding: 10px 18px;
+      font-weight: 800;
+      font-size: 13px;
+      box-shadow: 0 6px 20px rgba(0,191,99,0.5);
+      z-index: 999999;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .pwa-close {
-      background: transparent;
+    #btnFloatingInstall:active {
+      transform: scale(0.95);
+    }
+
+    /* Modal emergente para instrucciones en iPhone/iOS o explicaciones */
+    #pwaInstructionsModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 1000000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .modal-card {
+      background: #161b22;
+      border: 2px solid #00bf63;
+      border-radius: 18px;
+      padding: 24px;
+      max-width: 340px;
+      text-align: center;
+      color: #ffffff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+    }
+
+    .modal-card h3 {
+      margin: 0 0 10px 0;
+      color: #00bf63;
+      font-size: 18px;
+    }
+
+    .modal-card p {
+      font-size: 13px;
+      color: #c9d1d9;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .modal-card button {
+      background: #00bf63;
+      color: #000;
       border: none;
-      color: #8b949e;
-      font-size: 16px;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: 800;
       cursor: pointer;
+      width: 100%;
     }
   </style>
 </head>
 <body>
 
-  <!-- BANNER DE INSTALACIÓN -->
-  <div id="pwaInstallBanner">
-    <div class="pwa-info">
-      <span style="font-size: 22px;">🏐</span>
-      <div>
-        <div style="color:#00bf63; font-weight:800; font-size:13px;">Entre Redes</div>
-        <div style="font-size:11px; color:#8b949e;" id="pwaText">Instalar App en la pantalla de inicio</div>
-      </div>
-    </div>
-    <div style="display:flex; align-items:center; gap:6px;">
-      <button class="pwa-btn" id="btnInstallPwa">Instalar</button>
-      <button class="pwa-close" onclick="cerrarBanner()">✕</button>
+  <!-- BOTÓN FLOTANTE PERMANENTE -->
+  <button id="btnFloatingInstall">
+    <span>🏐</span>
+    <span>Instalar App</span>
+  </button>
+
+  <!-- VENTANA MODAL DE INSTRUCCIONES -->
+  <div id="pwaInstructionsModal">
+    <div class="modal-card">
+      <h3>Instalar Entre Redes</h3>
+      <p id="modalInstructionsText">
+        Para instalar la app en tu celular:<br><br>
+        1. Tocá el botón <b>'Compartir'</b> ⎘ en tu navegador.<br>
+        2. Seleccioná <b>'Agregar a la pantalla de inicio'</b> ➕.
+      </p>
+      <button onclick="cerrarModal()">Entendido</button>
     </div>
   </div>
 
-  <!-- IFRAME CON LA URL DE APPS SCRIPT -->
+  <!-- IFRAME CON LA APP DE GOOGLE -->
   <iframe 
     id="appFrame"
     src="https://script.google.com/macros/s/AKfycbzVFhDthR8fFK7sakUg2SYGmtkeQkN-eloAlapDD2Pnh_PjH2lapPFXSAtSyiDlSJxuAg/exec" 
@@ -106,9 +140,15 @@
 
   <script>
     let deferredPrompt;
-    const banner = document.getElementById('pwaInstallBanner');
-    const btnInstall = document.getElementById('btnInstallPwa');
-    const pwaText = document.getElementById('pwaText');
+    const btnInstall = document.getElementById('btnFloatingInstall');
+    const modal = document.getElementById('pwaInstructionsModal');
+    const modalText = document.getElementById('modalInstructionsText');
+
+    // Ocultar botón si ya está abierta como App nativa
+    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    if (isStandalone) {
+      btnInstall.style.display = 'none';
+    }
 
     // Registrar Service Worker
     if ('serviceWorker' in navigator) {
@@ -117,36 +157,36 @@
       });
     }
 
-    // Capturar evento de instalación en Android / Chrome
+    // Capturar el evento de instalación para Android/Chrome
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      banner.style.display = 'flex';
     });
 
+    // Acción del botón flotante
     btnInstall.addEventListener('click', async () => {
       if (deferredPrompt) {
+        // Disparar instalador de Android
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
-          banner.style.display = 'none';
+          btnInstall.style.display = 'none';
         }
         deferredPrompt = null;
+      } else {
+        // Si no hay evento automático (ej: iPhone o Chrome bloqueó el popup)
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          modalText.innerHTML = "<b>Para instalar en iPhone:</b><br><br>1. Tocá el botón <b>'Compartir'</b> ⎘ (abajo en Safari).<br>2. Elegí <b>'Agregar a inicio'</b> ➕.";
+        } else {
+          modalText.innerHTML = "<b>Para instalar en Android:</b><br><br>1. Tocá los <b>3 puntos (⋮)</b> arriba a la derecha en Chrome.<br>2. Seleccioná <b>'Instalar aplicación'</b> o <b>'Agregar a la pantalla principal'</b>.";
+        }
+        modal.style.display = 'flex';
       }
     });
 
-    // Detectar si es iOS (iPhone / iPad)
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-
-    if (isIOS && !isStandalone) {
-      pwaText.innerText = "Tocá 'Compartir' ⎘ y 'Agregar a inicio'";
-      btnInstall.style.display = 'none';
-      banner.style.display = 'flex';
-    }
-
-    function cerrarBanner() {
-      banner.style.display = 'none';
+    function cerrarModal() {
+      modal.style.display = 'none';
     }
   </script>
 </body>
